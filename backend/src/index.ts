@@ -4,7 +4,10 @@ import cors from 'cors'
 import connectDb from './config/db';
 import { APP_ORIGIN, NODE_ENV, PORT } from "./constants/env";
 import cookieParser from "cookie-parser";
+
+import authRoutes from "./routes/auth.route";
 import errorHandler from "./middleware/errorHandler";
+
 
 
 
@@ -20,7 +23,12 @@ app.use(
     })
 )
 app.use(cookieParser());
+
+app.use('/auth', authRoutes)
+
+
 app.use(errorHandler);
+
 
 app.listen(PORT , async()=> {
     console.log(`Server running on port ${PORT} in ${NODE_ENV}`);
