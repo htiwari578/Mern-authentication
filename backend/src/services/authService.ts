@@ -6,7 +6,7 @@ import VerificationCodeModel from "../models/verificationCode";
 import { oneYearFromNow } from "../utils/date";
 import { JWT_REFRESH_SECRET, JWT_SECRET } from "../constants/env";
 import appAssert from "../utils/appAssert";
-import { CONFLICT } from "../constants/http";
+import { CONFLICT, UNAUTHORIZED } from "../constants/http";
 
 
 export type CreateAccountParams = {
@@ -77,3 +77,61 @@ export const createAccount = async (data: CreateAccountParams)=> {
         refreshToken,
     };
 };
+
+
+ type loginParams = {
+    email: string;
+    password: string;
+    userAgent?: string;
+}
+export const loginUser = async ({email,password,userAgent}:loginParams  ) => {
+    //get user email
+    const user = await User.findOne({email});
+    appAssert(user, UNAUTHORIZED, "Invalid email or password");
+
+    //validate password from the user
+    const isValid = await  user.comparePassword(password);
+    appAssert(isValid , UNAUTHORIZED, "Invalid email or Password");
+
+    const userId = user._id;
+
+    //create session
+    const session = await SessionModel.create({
+        userId,
+        userAgent,
+    });
+
+    const sessionInfo = {
+        sessionId: session._id,
+
+    }
+    
+    const refreshToken = jwt.sign(
+        sessionInfo,
+        JWT_REFRESH_SECRET,
+        {
+            audience: ["user"],
+            expiresIn: "30d"
+        }
+    );
+
+    const accessToken = jwt.sign(
+        {
+            ...sessionInfo,
+            sessionId: session._id},
+        JWT_SECRET,
+        {
+            audience: ["user"],
+            expiresIn: "15m"
+        }
+    );
+    //return user & tokens
+    return {
+        user: user.omitPassword(),
+        accessToken,
+        refreshToken,
+    }
+
+
+
+}
