@@ -2,8 +2,10 @@
 import catchError from "../utils/catchError";
 import { createAccount, loginUser } from "../services/authService";
 import { CREATED, OK } from "../constants/http";
-import { setAuthCookies } from "../utils/cookies";
+import { clearAuthCookies, setAuthCookies } from "../utils/cookies";
 import { loginSchema, registerSchema } from "./auth.Schema";
+import { AccessTokenPayload, verifyToken } from "../utils/jwt";
+import SessionModel from "../models/session.model";
 
 
 
@@ -34,3 +36,15 @@ export const userLogin = catchError (async (req,res)=> {
         message: "Login successfull",
     });
 });
+
+export const userLogout = catchError(async(req,res) =>{
+    const accessToken = req.cookies.accessToken;
+    const {payload,error} =  verifyToken(accessToken)
+
+    if(payload){
+        await SessionModel.findByIdAndDelete(payload.sessionId);
+    }
+    return clearAuthCookies(res).status(OK).json({
+        message:"Logout successfully",
+    });
+})
