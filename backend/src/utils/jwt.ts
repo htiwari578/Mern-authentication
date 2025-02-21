@@ -44,7 +44,7 @@ export const signToken = (
     });
 };
    
-export const verifyToken =  (
+export const verifyToken = <TPayload extends object = AccessTokenPayload> (
     token: string,
     options?: VerifyOptions & {secret: string}
 )=> {
@@ -55,7 +55,7 @@ export const verifyToken =  (
                 ... defaults, 
                 ...verifyOpts,
             }
-        )
+        )as TPayload
         return {
             payload
         }
