@@ -44,7 +44,7 @@ export const signToken = (
     });
 };
    
-export const verifyToken = <TPayload extends object = AccessTokenPayload> (
+export const verifyToken = <TPayload extends object=AccessTokenPayload> (
     token: string,
     options?: VerifyOptions & {secret: string}
 )=> {
