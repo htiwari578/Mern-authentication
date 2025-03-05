@@ -1,11 +1,12 @@
 
 import catchError from "../utils/catchError";
 import { createAccount, loginUser } from "../services/authService";
-import { CREATED, OK } from "../constants/http";
+import { CREATED, OK, UNAUTHORIZED } from "../constants/http";
 import { clearAuthCookies, setAuthCookies } from "../utils/cookies";
 import { loginSchema, registerSchema } from "./auth.Schema";
 import { AccessTokenPayload, verifyToken } from "../utils/jwt";
 import SessionModel from "../models/session.model";
+import appAssert from "../utils/appAssert";
 
 
 
@@ -38,8 +39,8 @@ export const userLogin = catchError (async (req,res)=> {
 });
 
 export const userLogout = catchError(async(req,res) =>{
-    const accessToken = req.cookies.accessToken;
-    const {payload,error} =  verifyToken(accessToken)
+    const accessToken = req.cookies.accessToken as string | undefined;
+    const {payload,error} =  verifyToken(accessToken || " ");
 
     if(payload){
         await SessionModel.findByIdAndDelete(payload.sessionId);
@@ -47,4 +48,11 @@ export const userLogout = catchError(async(req,res) =>{
     return clearAuthCookies(res).status(OK).json({
         message:"Logout successfully",
     });
+});
+
+export const refreshHandler = catchError(async(req,res)=>{
+    const refreshToken = req.cookies.refreshToken as string | undefined;
+    appAssert(refreshToken , UNAUTHORIZED ,"Missing refresh token");
+
+
 })
